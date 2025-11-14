@@ -39,9 +39,7 @@ final class InputSignalTracker: SignalTracker {
   // MARK: - Tracking
 
   func start() throws {
-	try session.setActive(false)
     try session.setCategory(AVAudioSession.Category.playAndRecord)
-	try session.setActive(true)
 
     // check input type
     let currentRoute = session.currentRoute
@@ -80,13 +78,10 @@ final class InputSignalTracker: SignalTracker {
     }
 
     try audioEngine?.start()
-	DispatchQueue.global(qos: .userInteractive).async {
-		self.captureSession.startRunning()
-	}
-	// we can't do this when calling startRunning asynchronously:
-	//guard captureSession.isRunning == true else {
-	//	throw InputSignalTrackerError.inputNodeMissing
-	//}
+    captureSession.startRunning()
+    guard captureSession.isRunning == true else {
+        throw InputSignalTrackerError.inputNodeMissing
+    }
   }
 
   func stop() {
@@ -97,19 +92,8 @@ final class InputSignalTracker: SignalTracker {
     audioEngine?.stop()
     audioEngine?.reset()
     audioEngine = nil
-	DispatchQueue.global(qos: .userInteractive).async {
-		for input in self.captureSession.inputs {
-			self.captureSession.removeInput(input)
-		}
-		for output in self.captureSession.outputs {
-			self.captureSession.removeOutput(output)
-		}
-		for connection in self.captureSession.connections {
-			self.captureSession.removeConnection(connection)
-		}
-		self.captureSession.stopRunning()
-	}
- }
+    captureSession.stopRunning()
+  }
 
   private func setupAudio() {
     do {
